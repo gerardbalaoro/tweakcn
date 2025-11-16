@@ -5,6 +5,7 @@ import { useColorControlFocus } from "@/store/color-control-focus-store";
 import { ColorPickerProps } from "@/types";
 import { debounce } from "@/utils/debounce";
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { parse, formatHex } from "culori";
 import { ColorSelectorPopover } from "./color-selector-popover";
 import { SectionContext } from "./section-context";
 
@@ -118,7 +119,7 @@ const ColorPicker = ({ color, onChange, label, name }: ColorPickerProps) => {
           <input
             type="color"
             id={`color-${label.replace(/\s+/g, "-").toLowerCase()}`}
-            value={color}
+            value={formatHex(parse(color))}
             onChange={handleColorChange}
             className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
           />
