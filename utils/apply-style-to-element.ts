@@ -3,6 +3,9 @@ export function applyStyleToElement(
   key: string,
   value: string
 ) {
+  // Only run in the browser where document is available
+  if (typeof document === "undefined") return;
+
   const currentStyle = element.getAttribute("style") || "";
   // Remove the existing variable definitions with the same name
   const cleanedStyle = currentStyle.replace(

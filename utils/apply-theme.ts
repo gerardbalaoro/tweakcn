@@ -57,7 +57,9 @@ export const applyThemeToElement = (
 ) => {
   const { currentMode: mode, styles: themeStyles } = themeState;
 
-  if (!rootElement) return;
+  // Only run in the browser where document is available
+  if (typeof document === "undefined") return;
+  if (!rootElement || (typeof (rootElement as any).style === "undefined")) return;
 
   updateThemeClass(rootElement, mode);
   // Apply common styles (like border-radius) based on the 'light' mode definition
