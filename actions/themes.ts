@@ -4,7 +4,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { theme as themeTable } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
-import cuid from "cuid";
+import { createId } from "@paralleldrive/cuid2";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { themeStylesSchema, type ThemeStyles } from "@/types/theme";
@@ -112,7 +112,7 @@ export async function createTheme(formData: { name: string; styles: ThemeStyles 
     }
 
     const { name, styles } = validation.data;
-    const newThemeId = cuid();
+    const newThemeId = createId();
     const now = new Date();
 
     const [insertedTheme] = await db
