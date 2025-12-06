@@ -53,7 +53,7 @@ Even if you don't plan to write code, there are many ways to contribute:
 ### Prerequisites
 
 - Node.js 18+
-- npm / yarn / pnpm
+- pnpm
 
 ### Installation
 
@@ -71,7 +71,7 @@ Even if you don't plan to write code, there are many ways to contribute:
 3.  **Install Dependencies:** Install the necessary project dependencies:
 
     ```bash
-    npm install
+    pnpm install
     ```
 
 ### Set up the development environment (follow closely)
