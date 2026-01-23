@@ -7,76 +7,157 @@ import { ThemeStyles } from "@/types/theme";
 
 type ThemeMode = "light" | "dark";
 
+const COLOR_VARIABLE_KEYS = [
+  "background",
+  "foreground",
+  "card",
+  "card-foreground",
+  "popover",
+  "popover-foreground",
+  "primary",
+  "primary-foreground",
+  "secondary",
+  "secondary-foreground",
+  "muted",
+  "muted-foreground",
+  "accent",
+  "accent-foreground",
+  "destructive",
+  "destructive-foreground",
+  "border",
+  "input",
+  "ring",
+  "chart-1",
+  "chart-2",
+  "chart-3",
+  "chart-4",
+  "chart-5",
+  "sidebar",
+  "sidebar-foreground",
+  "sidebar-primary",
+  "sidebar-primary-foreground",
+  "sidebar-accent",
+  "sidebar-accent-foreground",
+  "sidebar-border",
+  "sidebar-ring",
+] as const;
+
 const generateColorVariables = (
   themeStyles: ThemeStyles,
   mode: ThemeMode,
-  formatColor: (color: string) => string
+  formatColor: (color: string) => string,
+  skipDuplicates: boolean = false
 ): string => {
   const styles = themeStyles[mode];
-  return `
-  --background: ${formatColor(styles.background)};
-  --foreground: ${formatColor(styles.foreground)};
-  --card: ${formatColor(styles.card)};
-  --card-foreground: ${formatColor(styles["card-foreground"])};
-  --popover: ${formatColor(styles.popover)};
-  --popover-foreground: ${formatColor(styles["popover-foreground"])};
-  --primary: ${formatColor(styles.primary)};
-  --primary-foreground: ${formatColor(styles["primary-foreground"])};
-  --secondary: ${formatColor(styles.secondary)};
-  --secondary-foreground: ${formatColor(styles["secondary-foreground"])};
-  --muted: ${formatColor(styles.muted)};
-  --muted-foreground: ${formatColor(styles["muted-foreground"])};
-  --accent: ${formatColor(styles.accent)};
-  --accent-foreground: ${formatColor(styles["accent-foreground"])};
-  --destructive: ${formatColor(styles.destructive)};
-  --destructive-foreground: ${formatColor(styles["destructive-foreground"])};
-  --border: ${formatColor(styles.border)};
-  --input: ${formatColor(styles.input)};
-  --ring: ${formatColor(styles.ring)};
-  --chart-1: ${formatColor(styles["chart-1"])};
-  --chart-2: ${formatColor(styles["chart-2"])};
-  --chart-3: ${formatColor(styles["chart-3"])};
-  --chart-4: ${formatColor(styles["chart-4"])};
-  --chart-5: ${formatColor(styles["chart-5"])};
-  --sidebar: ${formatColor(styles.sidebar)};
-  --sidebar-foreground: ${formatColor(styles["sidebar-foreground"])};
-  --sidebar-primary: ${formatColor(styles["sidebar-primary"])};
-  --sidebar-primary-foreground: ${formatColor(styles["sidebar-primary-foreground"])};
-  --sidebar-accent: ${formatColor(styles["sidebar-accent"])};
-  --sidebar-accent-foreground: ${formatColor(styles["sidebar-accent-foreground"])};
-  --sidebar-border: ${formatColor(styles["sidebar-border"])};
-  --sidebar-ring: ${formatColor(styles["sidebar-ring"])};`;
+  const lightStyles = themeStyles["light"];
+
+  const lines = COLOR_VARIABLE_KEYS.map((key) => {
+    const value = styles[key];
+    const formattedValue = formatColor(value);
+
+    // In dark mode, skip if value matches light mode
+    if (skipDuplicates && mode === "dark") {
+      const lightValue = lightStyles[key];
+      const formattedLightValue = formatColor(lightValue);
+      if (formattedValue === formattedLightValue) {
+        return null;
+      }
+    }
+
+    return `  --${key}: ${formattedValue};`;
+  }).filter(Boolean);
+
+  return lines.length > 0 ? "\n" + lines.join("\n") : "";
 };
 
-const generateFontVariables = (themeStyles: ThemeStyles, mode: ThemeMode): string => {
+const FONT_VARIABLE_KEYS = ["font-sans", "font-serif", "font-mono"] as const;
+
+const generateFontVariables = (
+  themeStyles: ThemeStyles,
+  mode: ThemeMode,
+  skipDuplicates: boolean = false
+): string => {
   const styles = themeStyles[mode];
-  return `
-  --font-sans: ${styles["font-sans"]};
-  --font-serif: ${styles["font-serif"]};
-  --font-mono: ${styles["font-mono"]};`;
+  const lightStyles = themeStyles["light"];
+
+  const lines = FONT_VARIABLE_KEYS.map((key) => {
+    const value = styles[key];
+
+    // In dark mode, skip if value matches light mode
+    if (skipDuplicates && mode === "dark") {
+      const lightValue = lightStyles[key];
+      if (value === lightValue) {
+        return null;
+      }
+    }
+
+    return `  --${key}: ${value};`;
+  }).filter(Boolean);
+
+  return lines.length > 0 ? "\n" + lines.join("\n") : "";
 };
 
-const generateShadowVariables = (shadowMap: Record<string, string>): string => {
-  return `
-  --shadow-2xs: ${shadowMap["shadow-2xs"]};
-  --shadow-xs: ${shadowMap["shadow-xs"]};
-  --shadow-sm: ${shadowMap["shadow-sm"]};
-  --shadow: ${shadowMap["shadow"]};
-  --shadow-md: ${shadowMap["shadow-md"]};
-  --shadow-lg: ${shadowMap["shadow-lg"]};
-  --shadow-xl: ${shadowMap["shadow-xl"]};
-  --shadow-2xl: ${shadowMap["shadow-2xl"]};`;
+const SHADOW_VARIABLE_KEYS = [
+  "shadow-2xs",
+  "shadow-xs",
+  "shadow-sm",
+  "shadow",
+  "shadow-md",
+  "shadow-lg",
+  "shadow-xl",
+  "shadow-2xl",
+] as const;
+
+const generateShadowVariables = (
+  shadowMap: Record<string, string>,
+  lightShadowMap?: Record<string, string>
+): string => {
+  const lines = SHADOW_VARIABLE_KEYS.map((key) => {
+    const value = shadowMap[key];
+
+    // Skip if value matches light mode
+    if (lightShadowMap && value === lightShadowMap[key]) {
+      return null;
+    }
+
+    return `  --${key}: ${value};`;
+  }).filter(Boolean);
+
+  return lines.length > 0 ? "\n" + lines.join("\n") : "";
 };
 
-const generateRawShadowVariables = (themeStyles: ThemeStyles, mode: ThemeMode): string => {
+const RAW_SHADOW_VARIABLE_KEYS = [
+  { key: "shadow-offset-x", cssVar: "shadow-x" },
+  { key: "shadow-offset-y", cssVar: "shadow-y" },
+  { key: "shadow-blur", cssVar: "shadow-blur" },
+  { key: "shadow-spread", cssVar: "shadow-spread" },
+  { key: "shadow-opacity", cssVar: "shadow-opacity" },
+  { key: "shadow-color", cssVar: "shadow-color" },
+] as const;
+
+const generateRawShadowVariables = (
+  themeStyles: ThemeStyles,
+  mode: ThemeMode,
+  skipDuplicates: boolean = false
+): string => {
   const styles = themeStyles[mode];
-  return `
-  --shadow-x: ${styles["shadow-offset-x"]};
-  --shadow-y: ${styles["shadow-offset-y"]};
-  --shadow-blur: ${styles["shadow-blur"]};
-  --shadow-spread: ${styles["shadow-spread"]};
-  --shadow-opacity: ${styles["shadow-opacity"]};
-  --shadow-color: ${styles["shadow-color"]};`;
+  const lightStyles = themeStyles["light"];
+
+  const lines = RAW_SHADOW_VARIABLE_KEYS.map(({ key, cssVar }) => {
+    const value = styles[key as keyof typeof styles];
+
+    // In dark mode, skip if value matches light mode
+    if (skipDuplicates && mode === "dark") {
+      const lightValue = lightStyles[key as keyof typeof lightStyles];
+      if (value === lightValue) {
+        return null;
+      }
+    }
+
+    return `  --${cssVar}: ${value};`;
+  }).filter(Boolean);
+
+  return lines.length > 0 ? "\n" + lines.join("\n") : "";
 };
 
 const generateTrackingVariables = (themeStyles: ThemeStyles): string => {
@@ -100,13 +181,29 @@ const generateThemeVariables = (
   formatColor: (color: string) => string
 ): string => {
   const selector = mode === "dark" ? ".dark" : ":root";
-  const colorVars = generateColorVariables(themeStyles, mode, formatColor);
-  const fontVars = generateFontVariables(themeStyles, mode);
-  const radiusVar = `\n  --radius: ${themeStyles[mode].radius};`;
+  const skipDuplicates = mode === "dark";
+
+  const colorVars = generateColorVariables(themeStyles, mode, formatColor, skipDuplicates);
+  const fontVars = generateFontVariables(themeStyles, mode, skipDuplicates);
+
+  // Only include radius in dark mode if it differs from light
+  const lightRadius = themeStyles["light"].radius;
+  const darkRadius = themeStyles["dark"].radius;
+  const radiusVar =
+    mode === "light" || lightRadius !== darkRadius
+      ? `\n  --radius: ${themeStyles[mode].radius};`
+      : "";
+
+  // Generate shadow maps for comparison
+  const lightShadowMap = getShadowMap({ styles: themeStyles, currentMode: "light" });
+  const currentShadowMap = getShadowMap({ styles: themeStyles, currentMode: mode });
   const shadowVars = generateShadowVariables(
-    getShadowMap({ styles: themeStyles, currentMode: mode })
+    currentShadowMap,
+    skipDuplicates ? lightShadowMap : undefined
   );
-  const rawShadowVars = generateRawShadowVariables(themeStyles, mode);
+
+  const rawShadowVars = generateRawShadowVariables(themeStyles, mode, skipDuplicates);
+
   const spacingVar =
     mode === "light"
       ? `\n  --spacing: ${themeStyles["light"].spacing ?? defaultLightThemeStyles.spacing};`
@@ -117,18 +214,17 @@ const generateThemeVariables = (
       ? `\n  --tracking-normal: ${themeStyles["light"]["letter-spacing"] ?? defaultLightThemeStyles["letter-spacing"]};`
       : "";
 
-  return (
-    selector +
-    " {" +
-    colorVars +
-    fontVars +
-    radiusVar +
-    rawShadowVars +
-    shadowVars +
-    trackingVars +
-    spacingVar +
-    "\n}"
+  // Collect all variable parts
+  const parts = [colorVars, fontVars, radiusVar, rawShadowVars, shadowVars, trackingVars, spacingVar].filter(
+    (part) => part.length > 0
   );
+
+  // If dark mode has no unique variables, return empty string
+  if (mode === "dark" && parts.length === 0) {
+    return "";
+  }
+
+  return selector + " {" + parts.join("") + "\n}";
 };
 
 const generateTailwindV4ThemeInline = (themeStyles: ThemeStyles): string => {
@@ -293,7 +389,10 @@ export const generateThemeCode = (
       ? "\n\nbody {\n  letter-spacing: var(--tracking-normal);\n}"
       : "";
 
-  return `${lightTheme}\n\n${darkTheme}${tailwindV4Theme}${bodyLetterSpacing}`;
+  // Only include dark theme section if it has unique variables
+  const darkSection = darkTheme ? `\n\n${darkTheme}` : "";
+
+  return `${lightTheme}${darkSection}${tailwindV4Theme}${bodyLetterSpacing}`;
 };
 
 export const generateTailwindConfigCode = (
